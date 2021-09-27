@@ -1,0 +1,6 @@
+*.o
+*.out
+src/*.o 
+src/*.out 
+tests/*.o 
+tests/*.out
