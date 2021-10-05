@@ -205,7 +205,23 @@ void dcx_b(Chip8080 *chip) {
      * Flags: None
      * BYTES: 1
      */
+    u_int16_t reg_bc = make_register_pair_from(chip->reg_b, chip->reg_c);
+    reg_bc--;
+    chip->reg_b = get_register_pair_h(reg_bc);
+    chip->reg_c = get_register_pair_l(reg_bc);
+}
 
+void inr_c(Chip8080 *chip) {
+    /* [0x0c] C = C + 1
+     * Flags: Z, S, P, AC
+     * BYTES: 1
+     */
+    chip->reg_c++;
+    chip->flags.z = is_zero(chip->reg_c);
+    chip->flags.s = has_sign(chip->reg_c);
+    chip->flags.p = has_parity(chip->reg_c, 8);
+    // TODO: implement AC Flag
+    chip->reg_pc++;
 }
 
 void unimplementedInstruction(Chip8080 *chip) {
