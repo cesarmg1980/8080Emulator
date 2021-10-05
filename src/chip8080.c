@@ -89,13 +89,12 @@ int has_parity(int x, int size) {
 	return (0 == (p & 0x1));
 }
 
-int is_multiple_of_8(u_int8_t reg) {
-    return reg % 8 == 0;
+int is_multiple_of_16(u_int8_t reg) {
+    return reg % 16 == 0;
 }
 
-// TODO: This implementation of AC is incorrect
 int has_ac(u_int8_t reg) {
-    return !is_zero(reg) && is_multiple_of_8(reg);
+    return !is_zero(reg) && is_multiple_of_16(reg);
 }
 
 void destroy_chip8080(Chip8080 *chip) {
@@ -103,30 +102,44 @@ void destroy_chip8080(Chip8080 *chip) {
     free(chip);
 }
 
-/*  Instrucions */ 
 
+/*  
+ *  Instrucions 
+ *  */ 
 
 void nop(Chip8080 *chip) {
-    /* [0x00] NOP; No operation, advances the PC by 1 */
+    /* [0x00] NOP; No operation, 
+     * PC += 1, 
+     * Instrucion Size: 1 BYTE
+     */
     chip->reg_pc++;
 }
 
 void lxi_b_d16(Chip8080 *chip, unsigned char *program_data) {
-    /* [0x01] LXI B,D16; B <- byte 3, C <- byte 2; 3 BYTES - */
+    /* [0x01] LXI B,D16; B <- byte 3, C <- byte 2; 
+     * Flags: None,
+     * Instruction Size: 3 BYTES
+     */
     chip->reg_b = program_data[2]; 
     chip->reg_c = program_data[1]; 
     chip->reg_pc += 3; 
 }
 
 void stax_b(Chip8080 *chip) {
-    /* [0x02] STAX B; (BC) <- A;  1 BYTE */
+    /* [0x02] STAX B; (BC) <- A;  
+     * Flags: None,
+     * Instruction Size: 1 BYTE 
+     */
     u_int16_t reg_bc = make_register_pair_from(chip->reg_b, chip->reg_c);
     chip->memory[reg_bc] = chip->reg_a;
     chip->reg_pc++;
 }
 
 void inx_b(Chip8080 *chip) {
-    /* [0x03] INX B; BC <- BC + 1; 1 BYTE*/
+    /* [0x03] INX B; BC <- BC + 1; 
+     * Flags: None,
+     * Instruction Size: 1 BYTE
+     */
     u_int16_t reg_bc = make_register_pair_from(chip->reg_b, chip->reg_c);
     reg_bc++;
     chip->reg_b = get_register_pair_h(reg_bc);
@@ -143,7 +156,7 @@ void inr_b(Chip8080 *chip) {
     chip->flags.z = is_zero(chip->reg_b);
     chip->flags.s = has_sign(chip->reg_b);
     chip->flags.p = has_parity(chip->reg_b, 8);
-    // TODO: implement AC Flag
+    chip->flags.ac = has_ac(chip->reg_b);
     chip->reg_pc++;
 }
 
@@ -156,7 +169,7 @@ void dcr_b(Chip8080 *chip) {
     chip->flags.z = is_zero(chip->reg_b);
     chip->flags.s = has_sign(chip->reg_b);
     chip->flags.p = has_parity(chip->reg_b, 8);
-    // TODO: Implement AC flag
+    chip->flags.ac = has_ac(chip->reg_b);
     chip->reg_pc++;
 }
 
@@ -220,7 +233,7 @@ void inr_c(Chip8080 *chip) {
     chip->flags.z = is_zero(chip->reg_c);
     chip->flags.s = has_sign(chip->reg_c);
     chip->flags.p = has_parity(chip->reg_c, 8);
-    // TODO: implement AC Flag
+    chip->flags.ac = has_ac(chip->reg_c);
     chip->reg_pc++;
 }
 

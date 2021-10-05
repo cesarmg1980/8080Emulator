@@ -48,7 +48,8 @@ static void test_stax_b(void **state) {
     assert_int_equal(0x0a, chip->memory[0x0001]);
     assert_int_equal(1, chip->reg_pc);
 
-    // We check that only the specified memory offset has the data, and the adjacents places are empty (0)
+    // We check that only the specified memory offset has the data, 
+    // and the adjacents places are empty (0)
     assert_int_equal(0x00, chip->memory[0x0001 - 1]);
     assert_int_equal(0x00, chip->memory[0x0001 + 1]);
 
@@ -80,28 +81,48 @@ static void test_inr_b(void **state) {
      * INR B: B <- B+1;
      * Flags: Z, S, P, AC;
      * Instruction Size: 1 BYTE
-     *
-     * Scenario: reg_b = 1
-     * Expected Result: reg_b = 2
-     * Flags: Z=0, S=0, P=1, AC=0
      */
-    
+
+    /* Scenario A: reg_b = -1
+     * Expected Result: reg_b = 0
+     * Flags: Z=1, S=0, P=1, AC=0
+     */
+
     Chip8080 *chip = make_chip8080();
-    chip->reg_b = 0x01;
+    chip->reg_b = 0xff;
     chip->reg_pc = 0x00ff;
 
     inr_b(chip);
 
-    assert_int_equal(0x02, chip->reg_b);
-    assert_int_equal(0x00, chip->flags.z);
+    assert_int_equal(0x00, chip->reg_b);
+    assert_int_equal(0x01, chip->flags.z);
     assert_int_equal(0x00, chip->flags.s);
-    assert_int_equal(0x00, chip->flags.p);
-    //TODO: Implement AC flag
+    assert_int_equal(0x01, chip->flags.p);
+    assert_int_equal(0x00, chip->flags.ac);
     assert_int_equal(0x0100, chip->reg_pc);
-
+    
     destroy_chip8080(chip);
+    
 
-    //TODO: Implemente Edge Cases
+     /* Scenario B Edge Case: reg_b = -17
+     * Expected Result: reg_b = -16
+     * Flags: Z=0, S=1, P=1, AC=1
+     */
+
+    Chip8080 *chip_2 = make_chip8080();
+    chip_2->reg_b = 0xef;
+    chip_2->reg_pc = 0x00ff;
+
+    inr_b(chip_2);
+
+    assert_int_equal(0xf0, chip_2->reg_b);
+    assert_int_equal(0x00, chip_2->flags.z);
+    assert_int_equal(0x01, chip_2->flags.s);
+    assert_int_equal(0x01, chip_2->flags.p);
+    assert_int_equal(0x01, chip_2->flags.ac);
+    assert_int_equal(0x0100, chip_2->reg_pc);
+    
+    destroy_chip8080(chip_2);
 }
 
 static void test_dcr_b(void **state) {
@@ -110,20 +131,20 @@ static void test_dcr_b(void **state) {
      * Flags: Z, S, P, AC
      * Instruction Size: 1 BYTE
      *
-     * Scenario: reg_b = 5
-     * Expected Result: reg_b = 4
-     * Flags: Z=0, S=0, P=0, AC=0 
+     * Scenario: reg_b = 1
+     * Expected Result: reg_b = 0
+     * Flags: Z=1, S=0, P=1, AC=0 
      */
 
     Chip8080 *chip = make_chip8080();
-    chip->reg_b = 0x05;
+    chip->reg_b = 0x01;
     chip->reg_pc = 0x00ff;
 
     dcr_b(chip);
-    assert_int_equal(0x04, chip->reg_b);
-    assert_int_equal(0x0, chip->flags.z);
+    assert_int_equal(0x00, chip->reg_b);
+    assert_int_equal(0x1, chip->flags.z);
     assert_int_equal(0x0, chip->flags.s);
-    // TODO Implement AC Flag
+    assert_int_equal(0x00, chip->flags.ac);
     assert_int_equal(0x0100, chip->reg_pc);
 
     destroy_chip8080(chip);
