@@ -51,4 +51,5 @@ void rlc(Chip8080*);
 void dad_b(Chip8080*);
 void ldax_b(Chip8080 *);
 void dcx_b(Chip8080*);
+void inr_c(Chip8080*);
 void unimplementedInstruction(Chip8080*);
