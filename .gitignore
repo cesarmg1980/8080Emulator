@@ -4,3 +4,4 @@ src/*.o
 src/*.out 
 tests/*.o 
 tests/*.out
+invaders/._invaders.*
