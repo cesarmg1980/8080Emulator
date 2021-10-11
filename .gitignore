@@ -5,3 +5,6 @@ src/*.out
 tests/*.o 
 tests/*.out
 invaders/._invaders.*
+._*.*
+src/._*.*
+tests/._*.*

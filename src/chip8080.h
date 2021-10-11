@@ -40,16 +40,16 @@ int is_multiple_of_8(u_int8_t);
 int has_ac(u_int8_t);
 void destroy_chip8080(Chip8080*);
 int run8080(Chip8080*);
-void nop(Chip8080*);
-void lxi_b_d16(Chip8080*, unsigned char*);
-void stax_b(Chip8080*);
-void inx_b(Chip8080*);
-void inr_b(Chip8080*);
-void dcr_b(Chip8080*);
-void mvi_b_d8(Chip8080*, unsigned char*);
-void rlc(Chip8080*);
-void dad_b(Chip8080*);
-void ldax_b(Chip8080 *);
-void dcx_b(Chip8080*);
-void inr_c(Chip8080*);
+void nop(Chip8080*); // 0x00
+void lxi_b_d16(Chip8080*, unsigned char*); // 0x01
+void stax_b(Chip8080*); // 0x02
+void inx_b(Chip8080*); // 0x03
+void inr_b(Chip8080*); // 0x04
+void dcr_b(Chip8080*); // 0x05
+void mvi_b_d8(Chip8080*, unsigned char*); // 0x06
+void rlc(Chip8080*); // 0x07
+void dad_b(Chip8080*); // 0x09
+void ldax_b(Chip8080 *); // 0x0a
+void dcx_b(Chip8080*); // 0x0b
+void inr_c(Chip8080*); // 0x0c
 void unimplementedInstruction(Chip8080*);

@@ -144,6 +144,7 @@ static void test_dcr_b(void **state) {
     assert_int_equal(0x00, chip->reg_b);
     assert_int_equal(0x1, chip->flags.z);
     assert_int_equal(0x0, chip->flags.s);
+    assert_int_equal(0x01, chip->flags.p);
     assert_int_equal(0x00, chip->flags.ac);
     assert_int_equal(0x0100, chip->reg_pc);
 
@@ -230,7 +231,23 @@ static void test_inr_c(void **state) {
      *
      * Scenario C = 0xff
      * Expected Result: 0x00
+     * Flags: Z=1, S=0, P=1, AC=0
      */
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_c = 0xff;
+    chip->reg_pc = 0xffff;
+
+    inr_c(chip);
+
+    assert_int_equal(0x00, chip->reg_c);
+    assert_int_equal(0x01, chip->flags.z);
+    assert_int_equal(0x00, chip->flags.s);
+    assert_int_equal(0x01, chip->flags.p);
+    assert_int_equal(0x00, chip->flags.ac);
+
+    destroy_chip8080(chip);
+    
 }
 
 int main() {
@@ -245,6 +262,7 @@ int main() {
         cmocka_unit_test(test_dad_b),
         cmocka_unit_test(test_ldax_b),
         cmocka_unit_test(test_dcx_b),
+        cmocka_unit_test(test_inr_c),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

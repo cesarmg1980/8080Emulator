@@ -18,6 +18,8 @@ int run8080(Chip8080 *chip) {
         case 0x08: nop(chip); break;
         case 0x09: dad_b(chip); break;
         case 0x0a: ldax_b(chip); break;
+        case 0x0b: dcx_b(chip); break;
+        case 0x0c: inr_b(chip); break;
     }
     return 0;
 }
