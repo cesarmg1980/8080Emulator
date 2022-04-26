@@ -110,7 +110,7 @@ void destroy_chip8080(Chip8080 *chip) {
 /*  
  *  Instrucions 
  *  
- *  */ 
+ */ 
 
 void nop(Chip8080 *chip) {
     /* [0x00] NOP; No operation, 
@@ -245,8 +245,9 @@ void inr_c(Chip8080 *chip) {
 
 void dcr_c(Chip8080 *chip) {
     /* [0x0d] C = C - 1
-     Flags: Z, S, P, AC
-     Bytes: 1. */
+     * Flags: Z, S, P, AC
+     * Bytes: 1  
+     */
     chip->reg_c--;
     chip->flags.z = is_zero(chip->reg_c);
     chip->flags.s = has_sign(chip->reg_c);
@@ -255,12 +256,13 @@ void dcr_c(Chip8080 *chip) {
     chip->reg_pc++;
 }
 
-void mvi_c(Chip8080 *chip) {
+void mvi_c_d8(Chip8080 *chip, unsigned char *program_data) {
     /* [0x0e] C = Byte 2 
      * Flags: None
-     * Bytes: 2 */
-
-    // TODO: Implement Instruction
+     * Bytes: 2 
+     */
+    chip->reg_c = program_data[1]; 
+    chip->reg_pc += 2; 
 }
 
 

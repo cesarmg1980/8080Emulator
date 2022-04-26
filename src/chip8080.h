@@ -53,5 +53,5 @@ void ldax_b(Chip8080 *); // 0x0a
 void dcx_b(Chip8080*); // 0x0b
 void inr_c(Chip8080*); // 0x0c
 void dcr_c(Chip8080*); // 0x0d
-void mvi_c(Chip8080*); // 0x0e
+void mvi_c(Chip8080*, unsigned char*); // 0x0e
 void unimplementedInstruction(Chip8080*);

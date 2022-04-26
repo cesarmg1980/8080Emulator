@@ -155,8 +155,15 @@ static void test_dcr_b(void **state) {
 }
 
 static void test_mvi_b_d8(void **state) {
+    /* MVI B, data 8 bits: B <- Byte 2  
+     * Flags: None
+     * Instruction Size: 2 Bytes
+     *
+     * Scenario: Instruction MVI B, 5
+     * Expected Result: reg_b = 5
+     */
     // TODO: Implement Test
-
+    assert_int_equal(1, 0);
 }
 
 static void test_rlc(void **state) {
@@ -280,12 +287,15 @@ static void test_dcr_c(void **state) {
     destroy_chip8080(chip);
 }
 
-static void test_mvi_c(void **state) {
-    /* MVI C: C <- Byte 2
+static void test_mvi_c_d8(void **state) {
+    /* MVI C, data 8 bits: B <- Byte 2  
      * Flags: None
-     * Instruction Size: 2 BYTES
-     * */
-
+     * Instruction Size: 2 Bytes
+     *
+     * Scenario: Instruction MVI C, 5
+     * Expected Result: reg_c = 5
+     */
+    // TODO: Implement Instruction
     assert_int_equal(1, 0);
 
 }
