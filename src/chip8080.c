@@ -20,6 +20,8 @@ int run8080(Chip8080 *chip) {
         case 0x0a: ldax_b(chip); break;
         case 0x0b: dcx_b(chip); break;
         case 0x0c: inr_b(chip); break;
+        case 0x0d: dcr_c(chip); break;
+        case 0x0e: mvi_c(chip); break;
     }
     return 0;
 }
@@ -107,6 +109,7 @@ void destroy_chip8080(Chip8080 *chip) {
 
 /*  
  *  Instrucions 
+ *  
  *  */ 
 
 void nop(Chip8080 *chip) {
@@ -224,6 +227,7 @@ void dcx_b(Chip8080 *chip) {
     reg_bc--;
     chip->reg_b = get_register_pair_h(reg_bc);
     chip->reg_c = get_register_pair_l(reg_bc);
+    chip->reg_pc--;
 }
 
 void inr_c(Chip8080 *chip) {
@@ -238,6 +242,27 @@ void inr_c(Chip8080 *chip) {
     chip->flags.ac = has_ac(chip->reg_c);
     chip->reg_pc++;
 }
+
+void dcr_c(Chip8080 *chip) {
+    /* [0x0d] C = C - 1
+     Flags: Z, S, P, AC
+     Bytes: 1. */
+    chip->reg_c--;
+    chip->flags.z = is_zero(chip->reg_c);
+    chip->flags.s = has_sign(chip->reg_c);
+    chip->flags.p = has_parity(chip->reg_c, 8);
+    chip->flags.ac = has_ac(chip->reg_c);
+    chip->reg_pc++;
+}
+
+void mvi_c(Chip8080 *chip) {
+    /* [0x0e] C = Byte 2 
+     * Flags: None
+     * Bytes: 2 */
+
+    // TODO: Implement Instruction
+}
+
 
 void unimplementedInstruction(Chip8080 *chip) {
     printf("Error: Unimplemented Instruction!\n");

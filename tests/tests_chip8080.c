@@ -141,6 +141,7 @@ static void test_dcr_b(void **state) {
     chip->reg_pc = 0x00ff;
 
     dcr_b(chip);
+
     assert_int_equal(0x00, chip->reg_b);
     assert_int_equal(0x1, chip->flags.z);
     assert_int_equal(0x0, chip->flags.s);
@@ -206,6 +207,7 @@ static void test_dcx_b(void **state) {
     dcx_b(chip);
 
     assert_int_equal(0x00ff, make_register_pair_from(chip->reg_b, chip->reg_c));
+    assert_int_equal(0x00fe, chip->reg_pc);
 
     destroy_chip8080(chip);
 
@@ -215,11 +217,12 @@ static void test_dcx_b(void **state) {
     Chip8080 *chip_2 = make_chip8080();
     chip_2->reg_b = 0x00;
     chip_2->reg_c = 0x00;
-    chip_2->reg_pc = 0xffff;
+    chip_2->reg_pc = 0x00ff;
 
     dcx_b(chip_2);
 
     assert_int_equal(0xffff, make_register_pair_from(chip_2->reg_b, chip_2->reg_c));
+    assert_int_equal(0x00fe, chip->reg_pc);
 
     destroy_chip8080(chip_2);
 }
@@ -236,7 +239,7 @@ static void test_inr_c(void **state) {
 
     Chip8080 *chip = make_chip8080();
     chip->reg_c = 0xff;
-    chip->reg_pc = 0xffff;
+    chip->reg_pc = 0x00ff;
 
     inr_c(chip);
 
@@ -245,9 +248,46 @@ static void test_inr_c(void **state) {
     assert_int_equal(0x00, chip->flags.s);
     assert_int_equal(0x01, chip->flags.p);
     assert_int_equal(0x00, chip->flags.ac);
+    assert_int_equal(0x0100, chip->reg_pc);
 
     destroy_chip8080(chip);
     
+}
+
+static void test_dcr_c(void **state) {
+    /* INR C: C = C - 1
+     * Flags: Z, S, P, AC
+     * Instruction Size: 1 BYTE
+     *
+     * Scenario C = 0x00
+     * Expected Result: 0xff
+     * Flags: Z=0, S=1, P=1, AC=0
+     */
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_c = 0x00;
+    chip->reg_pc = 0x00ff;
+
+    dcr_c(chip);
+
+    assert_int_equal(0xff, chip->reg_c);
+    assert_int_equal(0x00, chip->flags.z);
+    assert_int_equal(0x01, chip->flags.s);
+    assert_int_equal(0x01, chip->flags.p);
+    assert_int_equal(0x00, chip->flags.ac);
+    assert_int_equal(0x0100, chip->reg_pc);
+
+    destroy_chip8080(chip);
+}
+
+static void test_mvi_c(void **state) {
+    /* MVI C: C <- Byte 2
+     * Flags: None
+     * Instruction Size: 2 BYTES
+     * */
+
+    assert_int_equal(1, 0);
+
 }
 
 int main() {
@@ -263,6 +303,8 @@ int main() {
         cmocka_unit_test(test_ldax_b),
         cmocka_unit_test(test_dcx_b),
         cmocka_unit_test(test_inr_c),
+        cmocka_unit_test(test_dcr_c),
+        cmocka_unit_test(test_mvi_c),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
