@@ -14,14 +14,14 @@ int run8080(Chip8080 *chip) {
         case 0x04: inr_b(chip); break; 
         case 0x05: dcr_b(chip); break;
         case 0x06: mvi_b_d8(chip, program_data); break;
-        case 0x07: rlc(chip); break;
+        case 0x07: unimplementedInstruction(chip); // rlc(chip); break;
         case 0x08: nop(chip); break;
         case 0x09: dad_b(chip); break;
         case 0x0a: ldax_b(chip); break;
         case 0x0b: dcx_b(chip); break;
         case 0x0c: inr_b(chip); break;
         case 0x0d: dcr_c(chip); break;
-        case 0x0e: mvi_c(chip); break;
+        case 0x0e: mvi_c_d8(chip, program_data); break;
     }
     return 0;
 }
