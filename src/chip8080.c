@@ -22,6 +22,10 @@ int run8080(Chip8080 *chip) {
         case 0x0c: inr_b(chip); break;
         case 0x0d: dcr_c(chip); break;
         case 0x0e: mvi_c_d8(chip, program_data); break;
+        case 0x0f: unimplementedInstruction(chip); // rrc(); break;
+        case 0x10: nop(chip);
+        case 0x11: lxi_d_d16(chip, program_data);
+        case 0x12: stax_d(chip);
     }
     return 0;
 }
@@ -265,6 +269,33 @@ void mvi_c_d8(Chip8080 *chip, unsigned char *program_data) {
     chip->reg_pc += 2; 
 }
 
+void rrc(Chip8080 *chip) {
+    /* [0x0f] A = A>>1; bit 7 = prev bit 0; CY = prev bit 0
+     * Flags: CY
+     * Instruction Size: 1 Byte 
+     */
+     // TODO: Implement
+}
+
+void lxi_d_d16(Chip8080 *chip, unsigned char *program_data) {
+    /* [0x11] LXI D,D16; D <- byte 3, E <- byte 2; 
+     * Flags: None,
+     * Instruction Size: 3 BYTES
+     */
+    chip->reg_d = program_data[2]; 
+    chip->reg_e = program_data[1]; 
+    chip->reg_pc += 3; 
+}
+
+void stax_d(Chip8080 *chip) {
+    /* [0x12] STAX D; (DE) <- A;  
+     * Flags: None,
+     * Instruction Size: 1 BYTE 
+     */
+    u_int16_t reg_de = make_register_pair_from(chip->reg_d, chip->reg_e);
+    chip->memory[reg_de] = chip->reg_a;
+    chip->reg_pc++;
+}
 
 void unimplementedInstruction(Chip8080 *chip) {
     printf("Error: Unimplemented Instruction!\n");

@@ -326,6 +326,63 @@ static void test_mvi_c_d8(void **state) {
     assert_int_equal(0x0101, chip->reg_pc);
 
     free(program_data);
+    destroy_chip8080(chip);
+}
+
+static void tests_rrc(void **state) {
+    /* Unimplemented  */ 
+    // TODO: Implement
+}
+
+static void test_lxi_d_d16(void **state) {
+    /* Test that: 
+     * LXI D,D16; D <- byte 3, E <- byte 2;
+     * Instruction Size: 3 BYTES  */
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_d = 0;
+    chip->reg_e = 0;
+    chip->reg_pc = 0;
+
+    size_t instruction_size = 3 * sizeof(u_int8_t);
+    u_int8_t *program_data = (u_int8_t *) malloc(instruction_size);
+    program_data[0] = 0x01; // The Instruction's Opcode
+    program_data[1] = 0x02;
+    program_data[2] = 0x03;
+
+
+    lxi_d_d16(chip, program_data);
+    
+    assert_int_equal(0x03, chip->reg_d);
+    assert_int_equal(0x02, chip->reg_e);
+    assert_int_equal(3, chip->reg_pc);
+    
+    free(program_data);
+    destroy_chip8080(chip);
+}
+
+static void test_stax_d(void **state) {
+    /* Test That
+     * STAX D; (DE) <- A;
+     * Instruction Size: 1 BYTE */
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_a = 0x0a;
+    chip->reg_d = 0x00;
+    chip->reg_e = 0x01;
+    chip->reg_pc = 0x00ff;
+
+    stax_d(chip);
+
+    assert_int_equal(0x0a, chip->memory[0x0001]);
+    assert_int_equal(0x0100, chip->reg_pc);
+
+    // We check that only the specified memory offset has the data, 
+    // and the adjacents places are empty (0)
+    assert_int_equal(0x00, chip->memory[0x0001 - 1]);
+    assert_int_equal(0x00, chip->memory[0x0001 + 1]);
+
+    destroy_chip8080(chip);
 }
 
 int main() {
@@ -343,6 +400,9 @@ int main() {
         cmocka_unit_test(test_inr_c),
         cmocka_unit_test(test_dcr_c),
         cmocka_unit_test(test_mvi_c_d8),
+        //cmocka_unit_test(tests_rrc),
+        cmocka_unit_test(test_lxi_d_d16),
+        cmocka_unit_test(test_stax_d),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
