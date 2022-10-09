@@ -185,7 +185,22 @@ static void test_rlc(void **state) {
 }
 
 static void test_dad_b(void **state) {
-    // TODO: Implement Test
+    /* Test that: 
+     * DAD B; HL = HL + BC
+     */ 
+    Chip8080 *chip = make_chip8080();
+    chip->reg_h = 0x01;
+    chip->reg_l = 0xff;
+    chip->reg_b = 0x00;
+    chip->reg_c = 0xff;
+    chip->reg_pc = 0x0100;
+
+    dad_b(chip);
+
+    assert_int_equal(0x02, chip->reg_h);
+    assert_int_equal(0xfe, chip->reg_l);
+    assert_int_equal(0x00, chip->flags.cy);
+    assert_int_equal(0x0101, chip->reg_pc);
 }
 
 
@@ -214,11 +229,6 @@ static void test_ldax_b(void **state) {
 
 static void test_dcx_b(void **state) {
     /* DCX B: BC = BC - 1
-     * Flags: None
-     * Instruction Size: 1 BYTE
-     *
-     * Scenario BC = 0x0100
-     * Expected Result: 0x00ff
      */
     Chip8080 *chip = make_chip8080();
     chip->reg_b = 0x01;
@@ -228,24 +238,9 @@ static void test_dcx_b(void **state) {
     dcx_b(chip);
 
     assert_int_equal(0x00ff, make_register_pair_from(chip->reg_b, chip->reg_c));
-    assert_int_equal(0x00fe, chip->reg_pc);
+    assert_int_equal(0x0100, chip->reg_pc);
 
     destroy_chip8080(chip);
-
-    /* Scenario BC = 0x0000 
-     * Expected Result: 0xffff 
-     */
-    Chip8080 *chip_2 = make_chip8080();
-    chip_2->reg_b = 0x00;
-    chip_2->reg_c = 0x00;
-    chip_2->reg_pc = 0x00ff;
-
-    dcx_b(chip_2);
-
-    assert_int_equal(0xffff, make_register_pair_from(chip_2->reg_b, chip_2->reg_c));
-    assert_int_equal(0x00fe, chip->reg_pc);
-
-    destroy_chip8080(chip_2);
 }
 
 static void test_inr_c(void **state) {
@@ -385,6 +380,223 @@ static void test_stax_d(void **state) {
     destroy_chip8080(chip);
 }
 
+static void test_inx_d(void **state) {
+    /* Tests that:
+     * INX DE; DE <- DE+1
+     */ 
+
+    Chip8080 * chip = make_chip8080();
+    chip->reg_d = 0x00;
+    chip->reg_e = 0xff;
+    chip->reg_pc = 0x0000;
+
+    inx_d(chip);
+
+    assert_int_equal(0x01, chip->reg_d);
+    assert_int_equal(0x00, chip->reg_e);
+    assert_int_equal(0x0001, chip->reg_pc);
+
+    destroy_chip8080(chip);
+}
+
+static void test_inr_d(void **state) {
+    /* Tests that: 
+     * INR D; D <- D+1
+     */ 
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_d = 0xff;
+    chip->reg_pc = 0x00ff;
+
+    inr_d(chip);
+
+    assert_int_equal(0x00, chip->reg_d);
+    assert_int_equal(0x01, chip->flags.z);
+    assert_int_equal(0x00, chip->flags.s);
+    assert_int_equal(0x01, chip->flags.p);
+    assert_int_equal(0x00, chip->flags.ac);
+    assert_int_equal(0x0100, chip->reg_pc);
+    
+    destroy_chip8080(chip);
+}
+
+static void test_dcr_d(void **state) {
+    /* Tests that:
+     * DCR D; D <- D - 1
+     */ 
+    Chip8080 *chip = make_chip8080();
+    chip->reg_d = 0x01;
+    chip->reg_pc = 0x00fe;
+
+    dcr_d(chip);
+
+    assert_int_equal(0x00, chip->reg_d);
+    assert_int_equal(0x01, chip->flags.z);
+    assert_int_equal(0x00, chip->flags.s);
+    assert_int_equal(0x01, chip->flags.p);
+    assert_int_equal(0x00, chip->flags.ac);
+    assert_int_equal(0x00ff, chip->reg_pc);
+    
+    destroy_chip8080(chip);
+}
+
+static void tests_mvi_d_d8(void **state) {
+    /* Tests that:
+     * MVI D, D8; D <- D8
+     */ 
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_d = 0x0;
+    chip->reg_pc = 0x00ff;
+
+    size_t instruction_size = 2 * sizeof(u_int8_t);
+    u_int8_t *program_data = (u_int8_t*) malloc(instruction_size);
+    program_data[0] = 0x16; // The Instruction Opcode
+    program_data[1] = 0x03;
+
+    mvi_d_d8(chip, program_data);
+
+    assert_int_equal(0x03, chip->reg_d);
+    assert_int_equal(0x0101, chip->reg_pc);
+
+    free(program_data);
+}
+
+static void test_ral(void **state) {
+    /* Unimplemented
+     */
+
+    // TODO: Implement
+}
+
+static void test_dad_d(void **state) {
+    /* Test that: 
+     * DAD D; HL = HL + DE
+     */ 
+    Chip8080 *chip = make_chip8080();
+    chip->reg_h = 0x01;
+    chip->reg_l = 0xff;
+    chip->reg_d = 0x00;
+    chip->reg_e = 0xff;
+    chip->reg_pc = 0x00ff;
+
+    dad_d(chip);
+
+    assert_int_equal(0x02, chip->reg_h);
+    assert_int_equal(0xfe, chip->reg_l);
+    assert_int_equal(0x00, chip->flags.cy);
+    assert_int_equal(0x0100, chip->reg_pc);
+}
+
+static void test_ldax_d(void **state) {
+    /* Tests that: 
+     * LDAX B: A <- (DE)
+     */
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_d = 0x00;
+    chip->reg_e = 0x0a;
+    chip->memory[0x000a] = 0x0f;
+    chip->reg_pc = 0x00ff;
+
+    ldax_d(chip);
+
+    assert_int_equal(0x0f, chip->reg_a);
+    assert_int_equal(0x0100, chip->reg_pc);
+
+    destroy_chip8080(chip);
+}
+
+static void test_dcx_d(void **state) {
+    /* DCX D: DE = DE - 1
+     */
+    Chip8080 *chip = make_chip8080();
+    chip->reg_d = 0x01;
+    chip->reg_e = 0x00;
+    chip->reg_pc = 0x00ff;
+
+    dcx_d(chip);
+
+    assert_int_equal(0x00ff, make_register_pair_from(chip->reg_d, chip->reg_e));
+    assert_int_equal(0x0100, chip->reg_pc);
+
+    destroy_chip8080(chip);
+}
+
+static void test_inr_e(void **state) {
+    /* Test that:
+     * INR B: B <- B+1;
+     * Flags: Z, S, P, AC;
+     */
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_e = 0xff;
+    chip->reg_pc = 0x00ff;
+
+    inr_e(chip);
+
+    assert_int_equal(0x00, chip->reg_e);
+    assert_int_equal(0x01, chip->flags.z);
+    assert_int_equal(0x00, chip->flags.s);
+    assert_int_equal(0x01, chip->flags.p);
+    assert_int_equal(0x00, chip->flags.ac);
+    assert_int_equal(0x0100, chip->reg_pc);
+    
+    destroy_chip8080(chip);
+}
+
+static void test_dcr_e(void **state) {
+    /* Test that:
+     * DCR B: B <- B - 1;
+     * Flags: Z, S, P, AC
+     */
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_e = 0x01;
+    chip->reg_pc = 0x00ff;
+
+    dcr_e(chip);
+
+    assert_int_equal(0x00, chip->reg_e);
+    assert_int_equal(0x1, chip->flags.z);
+    assert_int_equal(0x0, chip->flags.s);
+    assert_int_equal(0x01, chip->flags.p);
+    assert_int_equal(0x00, chip->flags.ac);
+    assert_int_equal(0x0100, chip->reg_pc);
+
+    destroy_chip8080(chip);
+
+}
+
+static void test_mvi_e_d8(void **state) {
+    /* MVI E, data 8 bits: B <- Byte 2  
+     * Flags: None
+     */
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_e = 0x0;
+    chip->reg_pc = 0x00ff;
+
+    size_t instruction_size = 2 * sizeof(u_int8_t);
+    u_int8_t *program_data = (u_int8_t*) malloc(instruction_size);
+    program_data[0] = 0x06; // The Instruction Opcode
+    program_data[1] = 0x03;
+
+    mvi_e_d8(chip, program_data);
+
+    assert_int_equal(0x03, chip->reg_e);
+    assert_int_equal(0x0101, chip->reg_pc);
+
+    free(program_data);
+}
+
+static void test_rar(void **state) {
+    /* Unimplemented
+     */
+
+    // TODO: Implement
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_lxi_b_d16),
@@ -394,7 +606,7 @@ int main() {
         cmocka_unit_test(test_dcr_b),
         cmocka_unit_test(test_mvi_b_d8),
         //cmocka_unit_test(test_rlc),
-        //cmocka_unit_test(test_dad_b),
+        cmocka_unit_test(test_dad_b),
         cmocka_unit_test(test_ldax_b),
         cmocka_unit_test(test_dcx_b),
         cmocka_unit_test(test_inr_c),
@@ -403,6 +615,18 @@ int main() {
         //cmocka_unit_test(tests_rrc),
         cmocka_unit_test(test_lxi_d_d16),
         cmocka_unit_test(test_stax_d),
+        cmocka_unit_test(test_inx_d),
+        cmocka_unit_test(test_inr_d),
+        cmocka_unit_test(test_dcr_d),
+        cmocka_unit_test(tests_mvi_d_d8),
+        // cmocka_unit_test(test_ral),
+        cmocka_unit_test(test_dad_d),
+        cmocka_unit_test(test_ldax_d),
+        cmocka_unit_test(test_dcx_d),
+        cmocka_unit_test(test_inr_e),
+        cmocka_unit_test(test_dcr_e),
+        cmocka_unit_test(test_mvi_e_d8),
+        // cmocka_unit_test(test_rar),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

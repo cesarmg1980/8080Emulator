@@ -14,18 +14,30 @@ int run8080(Chip8080 *chip) {
         case 0x04: inr_b(chip); break; 
         case 0x05: dcr_b(chip); break;
         case 0x06: mvi_b_d8(chip, program_data); break;
-        case 0x07: unimplementedInstruction(chip); // rlc(chip); break;
+        case 0x07: unimplementedInstruction(chip); // rlc(chip)
         case 0x08: nop(chip); break;
         case 0x09: dad_b(chip); break;
         case 0x0a: ldax_b(chip); break;
         case 0x0b: dcx_b(chip); break;
-        case 0x0c: inr_b(chip); break;
+        case 0x0c: inr_c(chip); break;
         case 0x0d: dcr_c(chip); break;
         case 0x0e: mvi_c_d8(chip, program_data); break;
-        case 0x0f: unimplementedInstruction(chip); // rrc(); break;
-        case 0x10: nop(chip);
-        case 0x11: lxi_d_d16(chip, program_data);
-        case 0x12: stax_d(chip);
+        case 0x0f: unimplementedInstruction(chip); break; // rrc(chip)
+        case 0x10: nop(chip); break;
+        case 0x11: lxi_d_d16(chip, program_data); break;
+        case 0x12: stax_d(chip); break;
+        case 0x13: inx_d(chip); break;
+        case 0x14: inr_d(chip); break;
+        case 0x15: dcr_d(chip); break;
+        case 0x16: mvi_d_d8(chip, program_data); break;
+        case 0x17: unimplementedInstruction(chip); break; // ral(chip)
+        case 0x18: nop(chip); break;
+        case 0x19: dad_d(chip); break;
+        case 0x1a: ldax_d(chip); break;
+        case 0x1b: dcx_d(chip); break;
+        case 0x1c: inr_e(chip); break;
+        case 0x1d: dcr_e(chip); break;
+        case 0x1f: unimplementedInstruction(chip); break; // rar(chip)
     }
     return 0;
 }
@@ -210,6 +222,7 @@ void dad_b(Chip8080 *chip) {
     chip->reg_h = get_register_pair_h(res);
     chip->reg_l = get_register_pair_l(res);
     chip->flags.cy = ((res & 0xffff0000) > 0);
+    chip->reg_pc++;
 }
 
 void ldax_b(Chip8080 *chip) {
@@ -231,7 +244,7 @@ void dcx_b(Chip8080 *chip) {
     reg_bc--;
     chip->reg_b = get_register_pair_h(reg_bc);
     chip->reg_c = get_register_pair_l(reg_bc);
-    chip->reg_pc--;
+    chip->reg_pc++;
 }
 
 void inr_c(Chip8080 *chip) {
@@ -295,6 +308,142 @@ void stax_d(Chip8080 *chip) {
     u_int16_t reg_de = make_register_pair_from(chip->reg_d, chip->reg_e);
     chip->memory[reg_de] = chip->reg_a;
     chip->reg_pc++;
+}
+
+void inx_d(Chip8080 *chip) {
+    /* [0x13] INX DE; (DE) <- DE+1
+     * Flags: None,
+     * Instruction Size: 1 Byte
+     */
+    u_int16_t reg_de = make_register_pair_from(chip->reg_d, chip->reg_e);
+    reg_de++;
+    chip->reg_d = get_register_pair_h(reg_de);
+    chip->reg_e = get_register_pair_l(reg_de);
+    chip->reg_pc++;
+}
+
+void inr_d(Chip8080 *chip) {
+    /* [0x14] INR D; D <- D+1
+     * Flags: Z, S, P, AC
+     * Instruction Size: 1 Byte
+     */ 
+    chip->reg_d++;
+    chip->flags.z = is_zero(chip->reg_d);
+    chip->flags.s = has_sign(chip->reg_d);
+    chip->flags.p = has_parity(chip->reg_d, 8);
+    chip->flags.ac = has_ac(chip->reg_d);
+    chip->reg_pc++;
+}
+
+void dcr_d(Chip8080 *chip) {
+    /* [0x15] DCR D; D <- D-1
+     * Flags: Z, S, P, AC 
+     * Instruction Size: 1 Byte 
+     */ 
+    chip->reg_d--;
+    chip->flags.z = is_zero(chip->reg_d);
+    chip->flags.s = has_sign(chip->reg_d);
+    chip->flags.p = has_parity(chip->reg_d, 8);
+    chip->flags.ac = has_ac(chip->reg_d);
+    chip->reg_pc++;
+}
+
+void mvi_d_d8(Chip8080 *chip, unsigned char *program_data) {
+    /* [0x16] MVI D, D8; D <- Byte 2
+     * Flags: None
+     * Instruction Size: 2 Bytes
+     */ 
+    chip->reg_d = program_data[1];
+    chip->reg_pc += 2;
+}
+
+void ral(Chip8080 *chip) {
+    /* [0x17] RAL; A = A << 1; bit 0 = prev CY; CY = prev bit 7
+     * Flags: CY
+     * Instruction Size: 1 Byte 
+     */ 
+
+    //TODO: Implement
+}
+
+void dad_d(Chip8080 *chip) {
+    /* [0x19] DAD D; HL = HL+DE 
+     * Flags: CY 
+     * BYTES = 1
+     */
+    u_int32_t hl = make_register_pair_from(chip->reg_h, chip->reg_l);
+    u_int32_t de = make_register_pair_from(chip->reg_d, chip->reg_e);
+    u_int32_t res = hl + de;
+    chip->reg_h = get_register_pair_h(res);
+    chip->reg_l = get_register_pair_l(res);
+    chip->flags.cy = ((res & 0xffff0000) > 0);
+    chip->reg_pc++;
+}
+
+void ldax_d(Chip8080 *chip) {
+    /* [0x1a] LDAX D; A <- (DE)
+     * Flags: None
+     * Instruction Size: 1 Byte 
+     */ 
+    u_int16_t reg_de = make_register_pair_from(chip->reg_d, chip->reg_e);
+    chip->reg_a = chip->memory[reg_de];
+    chip->reg_pc++;
+}
+
+void dcx_d(Chip8080 * chip) {
+    /* [0x0b] DE = DE - 1
+     * Flags: None
+     * BYTES: 1
+     */
+    u_int16_t reg_de = make_register_pair_from(chip->reg_d, chip->reg_e);
+    reg_de--;
+    chip->reg_d = get_register_pair_h(reg_de);
+    chip->reg_e = get_register_pair_l(reg_de);
+    chip->reg_pc++;
+}
+
+void inr_e(Chip8080 *chip) {
+    /* [0x1c] INR E; E <- E+1
+     * Flags: Z, S, P, AC
+     * BYTES: 1
+    */
+
+    chip->reg_e++;
+    chip->flags.z = is_zero(chip->reg_e);
+    chip->flags.s = has_sign(chip->reg_e);
+    chip->flags.p = has_parity(chip->reg_e, 8);
+    chip->flags.ac = has_ac(chip->reg_e);
+    chip->reg_pc++;
+}
+
+void dcr_e(Chip8080 *chip) {
+    /* [0x1d] DCR E; E <- E-1
+     * Flags: Z, S, P, AC
+     * BYTES: 1
+     */
+    chip->reg_e--;
+    chip->flags.z = is_zero(chip->reg_e);
+    chip->flags.s = has_sign(chip->reg_e);
+    chip->flags.p = has_parity(chip->reg_e, 8);
+    chip->flags.ac = has_ac(chip->reg_e);
+    chip->reg_pc++;
+}
+
+void mvi_e_d8(Chip8080 *chip, unsigned char *program_data) {
+    /* [0x1e] MVI E,D8; E <- byte 2
+     * Flags: None
+     * BYTES 2 */
+    chip->reg_e = program_data[1]; 
+    chip->reg_pc += 2; 
+}
+
+void rar(Chip8080 *chip) {
+    /* [0x1f] RAR; A = A >> 1; bit 7 = prev bit 7; CY = prev bit 0
+     * Flags: CY
+     * Instruction Size: 1 Byte 
+     */ 
+
+    //TODO: Implement
 }
 
 void unimplementedInstruction(Chip8080 *chip) {

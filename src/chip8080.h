@@ -57,4 +57,16 @@ void mvi_c_d8(Chip8080*, unsigned char*); // 0x0e
 void rrc(Chip8080*); // 0x0f
 void lxi_d_d16(Chip8080*, unsigned char*); // 0x11
 void stax_d(Chip8080*); // 0x12
+void inx_d(Chip8080*); // 0x13
+void inr_d(Chip8080*); // 0x14
+void dcr_d(Chip8080*); // 0x15
+void mvi_d_d8(Chip8080*, unsigned char*); // 0x16
+void ral(Chip8080*); // 0x17
+void dad_d(Chip8080*); // 0x19
+void ldax_d(Chip8080*); // 0x1a
+void dcx_d(Chip8080*); // 0x1b
+void inr_e(Chip8080*); // 0x1c
+void dcr_e(Chip8080*); // 0x1d
+void mvi_e_d8(Chip8080*, unsigned char*); // 0x1e
+void rar(Chip8080*); // 0x1f
 void unimplementedInstruction(Chip8080*);
