@@ -38,6 +38,9 @@ int run8080(Chip8080 *chip) {
         case 0x1c: inr_e(chip); break;
         case 0x1d: dcr_e(chip); break;
         case 0x1f: unimplementedInstruction(chip); break; // rar(chip)
+        case 0x20: nop(chip); break;
+        case 0x21: lxi_h_d16(chip, program_data); break;
+        case 0x22: shld_addr(chip, program_data);
     }
     return 0;
 }
@@ -444,6 +447,26 @@ void rar(Chip8080 *chip) {
      */ 
 
     //TODO: Implement
+}
+
+void lxi_h_d16(Chip8080 *chip, unsigned char *program_data) {
+    /* [0x01] LXI H,D16; h <- byte 3, L <- byte 2; 
+     * Flags: None,
+     * Instruction Size: 3 BYTES
+     */
+    chip->reg_h = program_data[2]; 
+    chip->reg_l = program_data[1]; 
+    chip->reg_pc += 3; 
+}
+
+void shld_addr(Chip8080 *chip, unsigned char *program_data) {
+    /* [0x22] SHLD addr; (addr) <- L; (addr + 1) <- H
+     * Flags: None
+     * Instruction Size: 3 Bytes
+     */ 
+    chip->memory[make_register_pair_from(program_data[2], program_data[1])] = chip->reg_l;
+    chip->memory[make_register_pair_from(program_data[2], program_data[1])+1] = chip->reg_h;
+    chip->reg_pc += 3;
 }
 
 void unimplementedInstruction(Chip8080 *chip) {

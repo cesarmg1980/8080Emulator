@@ -597,6 +597,59 @@ static void test_rar(void **state) {
     // TODO: Implement
 }
 
+static void test_lxi_h_16(void **state) {
+    /* Test that: 
+     * LXI H,D16; H <- byte 3, L <- byte 2;
+     * Instruction Size: 3 BYTES  */
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_h = 0;
+    chip->reg_l = 0;
+    chip->reg_pc = 0;
+
+    size_t instruction_size = 3 * sizeof(u_int8_t);
+    u_int8_t *program_data = (u_int8_t *) malloc(instruction_size);
+    program_data[0] = 0x21;
+    program_data[1] = 0x02;
+    program_data[2] = 0x03;
+
+
+    lxi_h_d16(chip, program_data);
+    
+    assert_int_equal(0x03, chip->reg_h);
+    assert_int_equal(0x02, chip->reg_l);
+    assert_int_equal(3, chip->reg_pc);
+    
+    free(program_data);
+    destroy_chip8080(chip);
+}
+
+static void test_shld_addr(void **state) {
+    /* Test that: 
+     * SHDL addr; (addr) <- L; (addr+1) <- H
+     * Instruction Size: 3 BYTES  */
+
+    Chip8080 *chip = make_chip8080();
+    chip->reg_l = 0x0a;
+    chip->reg_h = 0x10;
+    chip->reg_pc = 0;
+
+    size_t instruction_size = 3 * sizeof(u_int8_t);
+    u_int8_t *program_data = (u_int8_t *) malloc(instruction_size);
+    program_data[0] = 0x22;
+    program_data[1] = 0x0a;
+    program_data[2] = 0x01;
+
+    shld_addr(chip, program_data);
+    
+    assert_int_equal(0x0a, chip->memory[0x010a]);
+    assert_int_equal(0x10, chip->memory[0x010a+1]);
+    assert_int_equal(3, chip->reg_pc);
+    
+    free(program_data);
+    destroy_chip8080(chip);
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_lxi_b_d16),
@@ -627,6 +680,8 @@ int main() {
         cmocka_unit_test(test_dcr_e),
         cmocka_unit_test(test_mvi_e_d8),
         // cmocka_unit_test(test_rar),
+        cmocka_unit_test(test_lxi_h_16),
+        cmocka_unit_test(test_shld_addr),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
