@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include "chip8080.h"
 #include "tools.h"
 
@@ -7,11 +8,11 @@ int run8080(Chip8080 *chip) {
     unsigned char *program_data = &chip->memory[chip->reg_pc];
 
     switch(*program_data) {
-        case 0x00: nop(chip); break; 
-        case 0x01: lxi_b_d16(chip, program_data); break;  
-        case 0x02: stax_b(chip); break;  
-        case 0x03: inx_b(chip); break; 
-        case 0x04: inr_b(chip); break; 
+        case 0x00: nop(chip); break;
+        case 0x01: lxi_b_d16(chip, program_data); break;
+        case 0x02: stax_b(chip); break;
+        case 0x03: inx_b(chip); break;
+        case 0x04: inr_b(chip); break;
         case 0x05: dcr_b(chip); break;
         case 0x06: mvi_b_d8(chip, program_data); break;
         case 0x07: unimplementedInstruction(chip); // rlc(chip)
@@ -126,33 +127,33 @@ void destroy_chip8080(Chip8080 *chip) {
 }
 
 
-/*  
- *  Instrucions 
- *  
- */ 
+/*
+ *  Instrucions
+ *
+ */
 
 void nop(Chip8080 *chip) {
-    /* [0x00] NOP; No operation, 
-     * PC += 1, 
+    /* [0x00] NOP; No operation,
+     * PC += 1,
      * Instrucion Size: 1 BYTE
      */
     chip->reg_pc++;
 }
 
 void lxi_b_d16(Chip8080 *chip, unsigned char *program_data) {
-    /* [0x01] LXI B,D16; B <- byte 3, C <- byte 2; 
+    /* [0x01] LXI B,D16; B <- byte 3, C <- byte 2;
      * Flags: None,
      * Instruction Size: 3 BYTES
      */
-    chip->reg_b = program_data[2]; 
-    chip->reg_c = program_data[1]; 
-    chip->reg_pc += 3; 
+    chip->reg_b = program_data[2];
+    chip->reg_c = program_data[1];
+    chip->reg_pc += 3;
 }
 
 void stax_b(Chip8080 *chip) {
-    /* [0x02] STAX B; (BC) <- A;  
+    /* [0x02] STAX B; (BC) <- A;
      * Flags: None,
-     * Instruction Size: 1 BYTE 
+     * Instruction Size: 1 BYTE
      */
     u_int16_t reg_bc = make_register_pair_from(chip->reg_b, chip->reg_c);
     chip->memory[reg_bc] = chip->reg_a;
@@ -160,7 +161,7 @@ void stax_b(Chip8080 *chip) {
 }
 
 void inx_b(Chip8080 *chip) {
-    /* [0x03] INX B; BC <- BC + 1; 
+    /* [0x03] INX B; BC <- BC + 1;
      * Flags: None,
      * Instruction Size: 1 BYTE
      */
@@ -185,7 +186,7 @@ void inr_b(Chip8080 *chip) {
 }
 
 void dcr_b(Chip8080 *chip) {
-    /* [0x05] DCR B; B <- B-1; 1 BYTE 
+    /* [0x05] DCR B; B <- B-1; 1 BYTE
      * Flags: Z, S, P, AC
      * BYTES: 1
      */
@@ -201,8 +202,8 @@ void mvi_b_d8(Chip8080 *chip, unsigned char *program_data) {
     /* [0x06] MVI B,D8; B <- byte 2
      * Flags: None
      * BYTES 2 */
-    chip->reg_b = program_data[1]; 
-    chip->reg_pc += 2; 
+    chip->reg_b = program_data[1];
+    chip->reg_pc += 2;
 }
 
 void rlc(Chip8080 *chip) {
@@ -215,8 +216,8 @@ void rlc(Chip8080 *chip) {
 }
 
 void dad_b(Chip8080 *chip) {
-    /* [0x09] DAD B; HL = HL+BC 
-     * Flags: CY 
+    /* [0x09] DAD B; HL = HL+BC
+     * Flags: CY
      * BYTES = 1
      */
     u_int32_t hl = make_register_pair_from(chip->reg_h, chip->reg_l);
@@ -266,7 +267,7 @@ void inr_c(Chip8080 *chip) {
 void dcr_c(Chip8080 *chip) {
     /* [0x0d] C = C - 1
      * Flags: Z, S, P, AC
-     * Bytes: 1  
+     * Bytes: 1
      */
     chip->reg_c--;
     chip->flags.z = is_zero(chip->reg_c);
@@ -277,36 +278,36 @@ void dcr_c(Chip8080 *chip) {
 }
 
 void mvi_c_d8(Chip8080 *chip, unsigned char *program_data) {
-    /* [0x0e] C = Byte 2 
+    /* [0x0e] C = Byte 2
      * Flags: None
-     * Bytes: 2 
+     * Bytes: 2
      */
-    chip->reg_c = program_data[1]; 
-    chip->reg_pc += 2; 
+    chip->reg_c = program_data[1];
+    chip->reg_pc += 2;
 }
 
 void rrc(Chip8080 *chip) {
     /* [0x0f] A = A>>1; bit 7 = prev bit 0; CY = prev bit 0
      * Flags: CY
-     * Instruction Size: 1 Byte 
+     * Instruction Size: 1 Byte
      */
      // TODO: Implement
 }
 
 void lxi_d_d16(Chip8080 *chip, unsigned char *program_data) {
-    /* [0x11] LXI D,D16; D <- byte 3, E <- byte 2; 
+    /* [0x11] LXI D,D16; D <- byte 3, E <- byte 2;
      * Flags: None,
      * Instruction Size: 3 BYTES
      */
-    chip->reg_d = program_data[2]; 
-    chip->reg_e = program_data[1]; 
-    chip->reg_pc += 3; 
+    chip->reg_d = program_data[2];
+    chip->reg_e = program_data[1];
+    chip->reg_pc += 3;
 }
 
 void stax_d(Chip8080 *chip) {
-    /* [0x12] STAX D; (DE) <- A;  
+    /* [0x12] STAX D; (DE) <- A;
      * Flags: None,
-     * Instruction Size: 1 BYTE 
+     * Instruction Size: 1 BYTE
      */
     u_int16_t reg_de = make_register_pair_from(chip->reg_d, chip->reg_e);
     chip->memory[reg_de] = chip->reg_a;
@@ -329,7 +330,7 @@ void inr_d(Chip8080 *chip) {
     /* [0x14] INR D; D <- D+1
      * Flags: Z, S, P, AC
      * Instruction Size: 1 Byte
-     */ 
+     */
     chip->reg_d++;
     chip->flags.z = is_zero(chip->reg_d);
     chip->flags.s = has_sign(chip->reg_d);
@@ -340,9 +341,9 @@ void inr_d(Chip8080 *chip) {
 
 void dcr_d(Chip8080 *chip) {
     /* [0x15] DCR D; D <- D-1
-     * Flags: Z, S, P, AC 
-     * Instruction Size: 1 Byte 
-     */ 
+     * Flags: Z, S, P, AC
+     * Instruction Size: 1 Byte
+     */
     chip->reg_d--;
     chip->flags.z = is_zero(chip->reg_d);
     chip->flags.s = has_sign(chip->reg_d);
@@ -355,7 +356,7 @@ void mvi_d_d8(Chip8080 *chip, unsigned char *program_data) {
     /* [0x16] MVI D, D8; D <- Byte 2
      * Flags: None
      * Instruction Size: 2 Bytes
-     */ 
+     */
     chip->reg_d = program_data[1];
     chip->reg_pc += 2;
 }
@@ -363,15 +364,15 @@ void mvi_d_d8(Chip8080 *chip, unsigned char *program_data) {
 void ral(Chip8080 *chip) {
     /* [0x17] RAL; A = A << 1; bit 0 = prev CY; CY = prev bit 7
      * Flags: CY
-     * Instruction Size: 1 Byte 
-     */ 
+     * Instruction Size: 1 Byte
+     */
 
     //TODO: Implement
 }
 
 void dad_d(Chip8080 *chip) {
-    /* [0x19] DAD D; HL = HL+DE 
-     * Flags: CY 
+    /* [0x19] DAD D; HL = HL+DE
+     * Flags: CY
      * BYTES = 1
      */
     u_int32_t hl = make_register_pair_from(chip->reg_h, chip->reg_l);
@@ -386,8 +387,8 @@ void dad_d(Chip8080 *chip) {
 void ldax_d(Chip8080 *chip) {
     /* [0x1a] LDAX D; A <- (DE)
      * Flags: None
-     * Instruction Size: 1 Byte 
-     */ 
+     * Instruction Size: 1 Byte
+     */
     u_int16_t reg_de = make_register_pair_from(chip->reg_d, chip->reg_e);
     chip->reg_a = chip->memory[reg_de];
     chip->reg_pc++;
@@ -436,37 +437,75 @@ void mvi_e_d8(Chip8080 *chip, unsigned char *program_data) {
     /* [0x1e] MVI E,D8; E <- byte 2
      * Flags: None
      * BYTES 2 */
-    chip->reg_e = program_data[1]; 
-    chip->reg_pc += 2; 
+    chip->reg_e = program_data[1];
+    chip->reg_pc += 2;
 }
 
 void rar(Chip8080 *chip) {
     /* [0x1f] RAR; A = A >> 1; bit 7 = prev bit 7; CY = prev bit 0
      * Flags: CY
-     * Instruction Size: 1 Byte 
-     */ 
+     * Instruction Size: 1 Byte
+     */
 
     //TODO: Implement
 }
 
 void lxi_h_d16(Chip8080 *chip, unsigned char *program_data) {
-    /* [0x01] LXI H,D16; h <- byte 3, L <- byte 2; 
+    /* [0x01] LXI H,D16; h <- byte 3, L <- byte 2;
      * Flags: None,
      * Instruction Size: 3 BYTES
      */
-    chip->reg_h = program_data[2]; 
-    chip->reg_l = program_data[1]; 
-    chip->reg_pc += 3; 
+    chip->reg_h = program_data[2];
+    chip->reg_l = program_data[1];
+    chip->reg_pc += 3;
 }
 
 void shld_addr(Chip8080 *chip, unsigned char *program_data) {
     /* [0x22] SHLD addr; (addr) <- L; (addr + 1) <- H
      * Flags: None
      * Instruction Size: 3 Bytes
-     */ 
+     */
     chip->memory[make_register_pair_from(program_data[2], program_data[1])] = chip->reg_l;
     chip->memory[make_register_pair_from(program_data[2], program_data[1])+1] = chip->reg_h;
     chip->reg_pc += 3;
+}
+
+void inx_h(Chip8080 *chip) {
+    /* [0x23] INX H; HL <- HL + 1
+     * Flags: None
+     * Instruction Size: 1 Byte
+     */
+    u_int16_t reg_hl = make_register_pair_from(chip->reg_h, chip->reg_l);
+    reg_hl++;
+    chip->reg_h = get_register_pair_h(reg_hl);
+    chip->reg_l = get_register_pair_l(reg_hl);
+    chip->reg_pc++;
+}
+
+void inr_h(Chip8080 *chip) {
+    /* [0x24] INR H: H <- H+1
+     * Flags: Z, S, P, AC
+     * Instruction Size: 1 Byte
+     */
+    chip->reg_h++;
+    chip->flags.z = is_zero(chip->reg_h);
+    chip->flags.s = has_sign(chip->reg_h);
+    chip->flags.p = has_parity(chip->reg_h, 8);
+    chip->flags.ac = has_ac(chip->reg_h);
+    chip->reg_pc++;
+}
+
+void dcr_h(Chip8080 *chip) {
+    /* [0x25] DCR H: H <- H-1  
+     * Flags: Z, S, P, AC 
+     * Instruction Size: 1 Byte
+     */
+    chip->reg_h--;
+    chip->flags.z = is_zero(chip->reg_h);
+    chip->flags.s = has_sign(chip->reg_h);
+    chip->flags.p = has_parity(chip->reg_h, 8);
+    chip->flags.ac = has_ac(chip->reg_h);
+    chip->reg_pc++;
 }
 
 void unimplementedInstruction(Chip8080 *chip) {

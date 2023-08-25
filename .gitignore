@@ -8,3 +8,4 @@ invaders/._invaders.*
 ._*.*
 src/._*.*
 tests/._*.*
+*.swp
