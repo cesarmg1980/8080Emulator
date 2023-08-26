@@ -77,4 +77,10 @@ void dcr_h(Chip8080*); // 0x25
 void mvi_h_d8(Chip8080*, unsigned char*); // 0x26
 void daa(Chip8080*); // 0x27
 void dad_h(Chip8080*); // 0x29
+void lhld_adr(Chip8080*, unsigned char*); // 0x2a
+void dcx_h(Chip8080*); // 0x2b
+void inr_l(Chip8080*); // 0x2c
+void dcr_l(Chip8080*); // 0x2d
+void mvi_l_d8(Chip8080*, unsigned char*); // 0x2e
+void cma(Chip8080*); // 0x2f
 void unimplementedInstruction(Chip8080*);

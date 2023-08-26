@@ -47,8 +47,14 @@ int run8080(Chip8080 *chip) {
         case 0x25: dcr_h(chip); break;
         case 0x26: mvi_h_d8(chip, program_data); break;
         case 0x27: unimplementedInstruction(chip); break; // daa(chip)
-        case 0x28: nop(chip); break; // 0x28
-        case 0x29: dad_h(chip); break; // 0x29
+        case 0x28: nop(chip); break;
+        case 0x29: dad_h(chip); break;
+        case 0x2a: lhld_adr(chip, program_data);
+        case 0x2b: dcx_h(chip); break;
+        case 0x2c: inr_l(chip); break;
+        case 0x2d: dcr_l(chip); break;
+        case 0x2e: mvi_l_d8(chip, program_data); break;
+        case 0x2f: cma(chip); break;
     }
     return 0;
 }
@@ -138,6 +144,14 @@ void destroy_chip8080(Chip8080 *chip) {
  *  Instrucions
  *
  */
+
+void unimplementedInstruction(Chip8080 *chip) {
+    printf("Error: Unimplemented Instruction!\n");
+    chip->reg_pc--;
+    disassemble_machine_code(chip->memory, chip->reg_pc);
+    printf("\n");
+    exit(1);
+}
 
 void nop(Chip8080 *chip) {
     /* [0x00] NOP; No operation,
@@ -541,10 +555,67 @@ void dad_h(Chip8080 *chip) {
     chip->reg_pc++;
 }
 
-void unimplementedInstruction(Chip8080 *chip) {
-    printf("Error: Unimplemented Instruction!\n");
-    chip->reg_pc--;
-    disassemble_machine_code(chip->memory, chip->reg_pc);
-    printf("\n");
-    exit(1);
+void lhld_adr(Chip8080 *chip, unsigned char *program_data) {
+    /* [0x2a] LHLD addr; L <- (addr), H <- (addr+1)
+     * Flags: None
+     * Bytes: 3
+     */
+    chip->reg_l = chip->memory[make_register_pair_from(program_data[2], program_data[1])];
+    chip->reg_h = chip->memory[make_register_pair_from(program_data[2], program_data[1]) + 1];
+    chip->reg_pc += 3;
+}
+
+void dcx_h(Chip8080 *chip) {
+    /* [0x2b] DCX H: HL <- HL - 1
+     * Flags: None
+     * Bytes: 1*/
+    u_int16_t hl = make_register_pair_from(chip->reg_h, chip->reg_l);
+    hl--;
+    chip->reg_h = get_register_pair_h(hl);
+    chip->reg_l = get_register_pair_l(hl);
+    chip->reg_pc++;
+}
+
+void inr_l(Chip8080 *chip) {
+    /* [0x2c] INR L: L <- L + 1
+     * Flags: Z, S, P, AC
+     * Bytes: 1
+     */
+    chip->reg_l++;
+    chip->flags.z = is_zero(chip->reg_l);
+    chip->flags.s =  has_sign(chip->reg_l);
+    chip->flags.p = has_parity(chip->reg_l, 8);
+    chip->flags.ac = has_ac(chip->reg_l);
+    chip->reg_pc++;
+}
+
+void dcr_l(Chip8080 *chip) {
+    /* [0x2d] DCR L: L <- L-1
+     * Flags: Z, S, P, AC
+     * Bytes: 1
+     */
+    chip->reg_l--;
+    chip->flags.z = is_zero(chip->reg_l);
+    chip->flags.s = has_sign(chip->reg_l);
+    chip->flags.p = has_parity(chip->reg_l, 8);
+    chip->flags.ac = has_ac(chip->reg_l);
+    chip->reg_pc++;
+}
+
+void mvi_l_d8(Chip8080 *chip, unsigned char *program_data) {
+    /* [0x2e] MVI L, D8: L <- Byte 2 of program_data 
+     * Flags: None 
+     * Byte: 2
+     */
+    chip->reg_l = program_data[1];
+    chip->reg_pc += 2;
+}
+
+void cma(Chip8080 *chip) {
+    /* [0x2f] CMA: A <- !A,
+     * Flags: None,
+     * Bytes: 1
+     */
+    chip->reg_a = ~chip->reg_a; 
+    chip->reg_pc++;
 }

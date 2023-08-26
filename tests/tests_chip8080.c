@@ -1,8 +1,11 @@
+#include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmocka.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include "../src/chip8080.h"
 
 static void test_lxi_b_d16(void **state) {
@@ -761,6 +764,114 @@ static void test_dad_h(void **state) {
     destroy_chip8080(chip);
 }
 
+static void test_lhdl_addr(void **state) {
+    /* Tests that:
+     * L <- addr; H <- addr + 1
+     */
+
+    Chip8080 *chip = make_chip8080();
+    chip->memory[0x00ff] = 0x01;
+    chip->memory[0x0100] = 0x02;
+    chip->reg_pc = 0x00;
+
+    u_int8_t *program_data = (u_int8_t *) malloc(3 * sizeof(u_int8_t));
+    program_data[0] = 0x2a; // instruction opcode
+    program_data[1] = 0xff; // byte 3
+    program_data[2] = 0x00; // byte 2
+
+    lhld_adr(chip, program_data);
+
+    assert_int_equal(0x01, chip->reg_l);
+    assert_int_equal(0x02, chip->reg_h);
+    assert_int_equal(0x03, chip->reg_pc);
+
+    free(program_data);
+    destroy_chip8080(chip);
+}
+
+static void test_dcx_h(void **state) {
+    /* Tests that:
+     * DCX H: HL <- HL - 1
+     */
+    Chip8080 *chip = make_chip8080();
+    chip->reg_h = 0x01;
+    chip->reg_l = 0x00;
+    chip->reg_pc = 0x00;
+
+    dcx_h(chip);
+
+    assert_int_equal(0x00, chip->reg_h);
+    assert_int_equal(0xff, chip->reg_l);
+    assert_int_equal(0x01, chip->reg_pc);
+
+    destroy_chip8080(chip);
+}
+
+static void test_inr_l(void **state) {
+    /* Tests that: INR L: L <- L + 1 */
+    Chip8080 *chip = make_chip8080();
+    chip->reg_l = 0x0a;
+    chip->reg_pc = 0x0f;
+
+    inr_l(chip);
+
+    assert_int_equal(0x0b, chip->reg_l);
+    assert_int_equal(0x00, chip->flags.z);
+    assert_int_equal(0x00, chip->flags.s);
+    assert_int_equal(0x00, chip->flags.p);
+    assert_int_equal(0x00, chip->flags.ac);
+    assert_int_equal(0x10, chip->reg_pc);
+
+    destroy_chip8080(chip);
+}
+
+static void test_dcr_l(void **state) {
+    /* Test that: DCR L: L <- L-1 */
+    Chip8080 *chip = make_chip8080();
+    chip->reg_l = 0x00;
+    chip->reg_pc = 0x00ff;
+
+    dcr_l(chip);
+
+    assert_int_equal(0xff, chip->reg_l);
+    assert_int_equal(0x00, chip->flags.z);
+    assert_int_equal(0x01, chip->flags.s);
+    assert_int_equal(0x01, chip->flags.p);
+    assert_int_equal(0x00, chip->flags.ac);
+
+    destroy_chip8080(chip);
+}
+
+static void test_mvi_l_d8(void **state) {
+    /* Tests that: MVI L, D8: L <- Byte 2 of Program Data */
+    Chip8080 *chip = make_chip8080();
+    chip->reg_pc = 0x00;
+    u_int8_t *program_data = (uint8_t *) malloc(2 * sizeof(uint8_t));
+    program_data[0] = 0x2e;
+    program_data[1] = 0x05;
+
+    mvi_l_d8(chip, program_data);
+
+    assert_int_equal(0x05, chip->reg_l);
+    assert_int_equal(0x02, chip->reg_pc);
+
+    free(program_data);
+    destroy_chip8080(chip);
+}
+
+static void test_cma(void **state) {
+    /* Tests that: CMA: A <- ~A */
+    Chip8080 *chip = make_chip8080();
+    chip->reg_a = 0x02;
+    chip->reg_pc = 0x00;
+
+    cma(chip);
+
+    assert_int_equal(0xfd, chip->reg_a);
+    assert_int_equal(0x01, chip->reg_pc);
+
+    destroy_chip8080(chip);
+}
 
 int main() {
     const struct CMUnitTest tests[] = {
@@ -799,6 +910,11 @@ int main() {
         cmocka_unit_test(test_dcr_h),
         cmocka_unit_test(test_mvi_h_d8),
         cmocka_unit_test(test_dad_h),
+        cmocka_unit_test(test_lhdl_addr),
+        cmocka_unit_test(test_dcx_h),
+        cmocka_unit_test(test_inr_l),
+        cmocka_unit_test(test_mvi_l_d8),
+        cmocka_unit_test(test_cma),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
